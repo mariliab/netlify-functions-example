@@ -13,7 +13,8 @@ exports.handler = async (event, context) => {
   const name = params.name || "World";
 
   const hasuraEvent = JSON.parse(event.body);
-  console.log("HASURA EVENT: " + JSON.stringify(hasuraEvent, null, 2))
+  const data = hasuraEvent.event.data.new
+  console.log("HASURA EVENT: " + JSON.stringify(data, null, 2))
 
   // Send greeting to Slack
   return fetch(process.env.SLACK_WEBHOOK_URL, {
@@ -21,11 +22,11 @@ exports.handler = async (event, context) => {
       "content-type": "application/json"
     },
     method: "POST",
-    body: JSON.stringify({ text: `${name} says hello!` })
+    body: JSON.stringify({ text: `${data.username} added a new comment to employee with id ${data.employee_id}!` })
   })
     .then(() => ({
       statusCode: 200,
-      body: `Hello, ${name}! Your greeting has been sent to Slack 👋`
+      body: `${data.username} added a new comment to employee with id ${data.employee_id}!`
     }))
     .catch(error => ({
       statusCode: 422,
