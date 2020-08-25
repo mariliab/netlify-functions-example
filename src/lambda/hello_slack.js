@@ -22,11 +22,11 @@ exports.handler = async (event, context) => {
       "content-type": "application/json"
     },
     method: "POST",
-    body: JSON.stringify({ text: `${data.username} added a new comment to employee with id ${data.employee_id}!` })
+    body: JSON.stringify({ text: `${data.username} added a new comment to ${data.employee_name}!` })
   })
     .then(() => ({
       statusCode: 200,
-      body: `${data.username} added a new comment to employee with id ${data.employee_id}!`
+      body: `${data.username} added a new comment to ${data.employee_name}!`
     }))
     .catch(error => ({
       statusCode: 422,
