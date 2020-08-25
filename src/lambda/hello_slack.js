@@ -12,6 +12,9 @@ exports.handler = async (event, context) => {
   const params = querystring.parse(event.body);
   const name = params.name || "World";
 
+  const hasuraEvent = JSON.parse(event.body);
+  console.log("HASURA EVENT: " + JSON.stringify(hasuraEvent, null, 2))
+
   // Send greeting to Slack
   return fetch(process.env.SLACK_WEBHOOK_URL, {
     headers: {
