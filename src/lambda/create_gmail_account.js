@@ -1,4 +1,6 @@
-const HASURA_OPERATION = `
+const fetch = require ('node-fetch');
+
+const HASURA_ADDMAILTOEMPLOYEE = `
 mutation ($id: String!, $gmailAddress: String!) {
   update_employees(where: {id: {_eq: $id}}, _set: {gmailAddress: $gmailAddress}) {
     affected_rows
@@ -11,31 +13,45 @@ mutation ($id: String!, $gmailAddress: String!) {
 }
 `;
 
-exports.handler = (lambdaEvent, context, callback) => {
-    const hasuraEvent = JSON.parse(lambdaEvent.body);
-    const data = hasuraEvent.event.data;
-    console.log("DATA: " + JSON.stringify(data, null, 2))
+const executeAddMailToEmployee = async (variables) => {
+  const result = await fetch ("https://mt-onboarding-app-dev.herokuapp.com/v1/graphql", {
+    method: 'POST',
+    body: JSON.stringify({
+      query: HASURA_ADDMAILTOEMPLOYEE,
+      variables
+    })
+  });
 
-    const variables = data.new.gmailAddress
-    
-    callback(null, {
-        statusCode: 200,
-        body: JSON.stringify({recievedData: data})
-    });
-    
-    return fetch("https://mt-onboarding-app-dev.herokuapp.com/v1/graphql", {
-        headers: {
-          "content-type": "application/json"
-        },
-        method: "POST",
-        body: JSON.stringify({ query: HASURA_OPERATION, variables })
-      })
-        .then(() => ({
-          statusCode: 200,
-          body: `Ok!`
-        }))
-        .catch(error => ({
-          statusCode: 422,
-          body: `Oops! Something went wrong. ${error}`
-        }));
-}
+  const data = await result.json();
+  console.log('DEBUG: ', data);
+  return data;
+};
+
+module.exports = async function (context, req) {
+
+  const {id, gmailAddress} = req.body.input;
+
+  // Write business logic that deals with inputs here...
+
+
+  // Execute the Hasura query
+  const {data, errors} = await executeAddMailToEmployee({ id, gmailAddress }, headers);
+
+  // If there's an error in the running the Hasura query
+  if (errors) {
+    context.res = {
+      headers: { 'Content-Type': 'application/json' },
+      status: 400,
+      body: errors[0]
+    };
+    return;
+  }
+
+  // If success
+  context.res = {
+    headers: { 'Content-Type': 'application/json' },
+    body: {
+      ...data.update_employees
+    }
+  };
+};
