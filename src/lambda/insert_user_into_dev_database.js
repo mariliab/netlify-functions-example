@@ -11,7 +11,7 @@ mutation($userId: String!, $userEmail: String! ){
 
 exports.handler = async (event, context) => {
   // Only allow POST
-  if (event.httpMethod !== "POST") {
+  if (event.op !== "INSERT") {
     return { statusCode: 405, body: "Method Not Allowed" };
   }
 
