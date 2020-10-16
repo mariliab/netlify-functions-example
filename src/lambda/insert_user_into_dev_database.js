@@ -28,7 +28,7 @@ exports.handler = (event, context, callback) => {
         email: request.event.data.new.email,
         role: request.event.data.new.role,
     };
-    fetch(hgeEndpoint + '/v1/graphql', {
+    return fetch(hgeEndpoint + '/v1/graphql', {
         method: 'POST',
         body: JSON.stringify({query: query, variables: qv}),
         headers: {'Content-Type': 'application/json', 'x-hasura-admin-secret': adminSecret},
