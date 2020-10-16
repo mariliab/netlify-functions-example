@@ -16,6 +16,7 @@ exports.handler = async (event, context) => {
   }
 
   const params = querystring.parse(event.body);
+  console.log("EVENT IS:" + JSON.stringify(event, null, 2));
   const userId = params.event.data.new.id;
   const userEmail = params.event.data.new.email;
 
