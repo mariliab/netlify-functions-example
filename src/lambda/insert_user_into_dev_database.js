@@ -16,8 +16,8 @@ exports.handler = async (event, context) => {
   }
 
   const params = querystring.parse(event.body);
-  const userId = params.event.user.user_id;
-  const userEmail = params.event.user.email;
+  const userId = params.event.data.new.id;
+  const userEmail = params.event.data.new.email;
 
   const graphqlReq = { 
       "query": HASURA_INSERTUSERINTODEVDATABASE, 
