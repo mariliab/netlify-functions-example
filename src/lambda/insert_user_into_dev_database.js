@@ -1,43 +1,41 @@
-import querystring from "querystring";
-import fetch from "node-fetch";
+const fetch = require('node-fetch');
 
-const HASURA_INSERTUSERINTODEVDATABASE = `
-mutation($userId: String!, $userEmail: String! ){
-    insert_users(objects: [{ id: $userId, email: $userEmail }], on_conflict: { constraint: users_pkey, update_columns: [] }) {
+const adminSecret = process.env.HASURA_ADMIN_SECRET;
+const hgeEndpoint = process.env.HASURA_DEV_DATABASEURL;
+
+const query = `
+mutation insertUsers ($id: String!, $email: String!, $role: String!) {
+    insert_users(objects: {id: $id, email: $email, role: $role}) {
       affected_rows
     }
   }
-`;
+`;  
 
-exports.handler = async (event, context) => {
-  // Only allow POST
-  if (event.op !== "INSERT") {
-    return { statusCode: 405, body: "Method Not Allowed" };
-  }
+exports.handler = (event, context, callback) => {
+    let request;
+    try {
+        request = JSON.parse(event.body);
+    } catch (e) {
+        return callback(null, {statusCode: 400, body: "cannot parse hasura event"});
+    }
 
-  const params = querystring.parse(event.body);
-  console.log("EVENT IS:" + JSON.stringify(event, null, 2));
-  const userId = params.event.data.new.id;
-  const userEmail = params.event.data.new.email;
-
-  const graphqlReq = { 
-      "query": HASURA_INSERTUSERINTODEVDATABASE, 
-      "variables": { 
-          "userId": userId, 
-          "userEmail": userEmail 
-        } 
+    const response = {
+        statusCode: 200,
+        body: "success"
     };
-
-  return fetch(process.env.HASURA_DEV_DATABASEURL, {
-    headers: {'content-type' : 'application/json', 'x-hasura-admin-secret': process.env.HASURA_ADMIN_SECRET},
-    method: "POST",
-    body: JSON.stringify(graphqlReq)
-  })
-    .then(() => ({
-      statusCode: 200
-    }))
-    .catch(error => ({
-      statusCode: 422,
-      body: `Oops! Something went wrong. ${error}`
-    }));
+    const qv = {
+        id: request.event.data.new.id,
+        email: request.event.data.new.email,
+        role: request.event.data.new.role,
+    };
+    fetch(hgeEndpoint + '/v1/graphql', {
+        method: 'POST',
+        body: JSON.stringify({query: query, variables: qv}),
+        headers: {'Content-Type': 'application/json', 'x-hasura-admin-secret': adminSecret},
+    })
+        .then(res => res.json())
+        .then(json => {
+            console.log(json);
+            callback(null, response);
+        });
 };
